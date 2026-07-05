@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# runtime market data cache (regenerated on refresh, see lib/priceCache.ts)
+/.cache
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

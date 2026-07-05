@@ -1,26 +1,61 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Counting-house palette: aged iron, ledger parchment, copper ember. */
+  --color-ink: #17130f;
+  --color-ink-raised: #211b14;
+  --color-ink-line: #372c20;
+  --color-parchment: #ece2cc;
+  --color-parchment-dim: #b9ad93;
+  --color-ember: #c6772f;
+  --color-ember-bright: #e2913f;
+  --color-verdigris: #5f9484;
+  --color-blood: #a13f3f;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: var(--color-ink);
+  --color-ink-raised: var(--color-ink-raised);
+  --color-ink-line: var(--color-ink-line);
+  --color-parchment: var(--color-parchment);
+  --color-parchment-dim: var(--color-parchment-dim);
+  --color-ember: var(--color-ember);
+  --color-ember-bright: var(--color-ember-bright);
+  --color-verdigris: var(--color-verdigris);
+  --color-blood: var(--color-blood);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--color-ink-line);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-image:
+    radial-gradient(ellipse 1200px 600px at 15% -10%, rgba(198, 119, 47, 0.08), transparent),
+    radial-gradient(ellipse 900px 500px at 100% 0%, rgba(95, 148, 132, 0.06), transparent);
+}
+
+::selection {
+  background: var(--color-ember);
+  color: var(--color-ink);
+}
+
+/* Tabular figures everywhere numbers appear, so ledger columns line up. */
+.font-mono {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

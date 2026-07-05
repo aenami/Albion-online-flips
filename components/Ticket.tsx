@@ -67,7 +67,12 @@ export function Ticket({ flip }: { flip: FlipOpportunity }) {
       />
       <div className="px-5 pt-4 pb-5">
         <div className="mb-3 flex items-start gap-3">
-          <ItemIcon itemId={flip.itemId} quality={flip.quality} size={48} />
+          <ItemIcon
+            itemId={flip.itemId}
+            itemName={flip.itemName}
+            quality={flip.quality}
+            size={48}
+          />
           <div className="min-w-0 flex-1">
             <p className="font-display text-lg leading-tight font-semibold text-parchment">
               {flip.itemName}

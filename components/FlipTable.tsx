@@ -76,7 +76,12 @@ export function FlipTable({
             >
               <td className="px-3 py-2">
                 <div className="flex items-center gap-2">
-                  <ItemIcon itemId={flip.itemId} quality={flip.quality} size={28} />
+                  <ItemIcon
+                    itemId={flip.itemId}
+                    itemName={flip.itemName}
+                    quality={flip.quality}
+                    size={28}
+                  />
                   <div className="min-w-0">
                     <p className="truncate text-parchment">{flip.itemName}</p>
                     <p className="text-[11px] text-parchment-dim">

@@ -162,26 +162,26 @@ export function Dashboard() {
         onRefresh={() => setRefreshTick((t) => t + 1)}
       />
 
-      <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-4">
-        <nav className="mb-2 flex flex-wrap gap-2">
+      <main className="mx-auto w-full max-w-[1400px] flex-1 px-5 py-6 sm:px-8">
+        <nav className="mb-3 flex flex-wrap gap-2">
           {FLIP_TABS.map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className={`rounded-sm border px-3 py-1.5 font-display text-sm font-medium transition-colors ${
+              className={`rounded-full px-4 py-2 font-display text-sm font-medium transition-colors ${
                 activeTab === tab
-                  ? "border-ember bg-ember/15 text-ember-bright"
-                  : "border-ink-line text-parchment-dim hover:border-parchment-dim hover:text-parchment"
+                  ? "bg-terracotta text-parchment shadow-sm"
+                  : "bg-wood-soft text-cream-soft hover:bg-wood-line/60 hover:text-cream"
               }`}
             >
               {FLIP_TYPE_LABELS[tab]}
             </button>
           ))}
         </nav>
-        <p className="mb-4 text-sm text-parchment-dim">{FLIP_TYPE_HINTS[activeTab]}</p>
+        <p className="mb-6 text-sm text-cream-soft">{FLIP_TYPE_HINTS[activeTab]}</p>
 
-        <div className="flex flex-col gap-4 lg:flex-row">
+        <div className="flex flex-col gap-5 lg:flex-row">
           <FiltersPanel
             activeTab={activeTab}
             filters={filters}
@@ -190,13 +190,13 @@ export function Dashboard() {
           />
 
           <div className="min-w-0 flex-1">
-            <p className="mb-3 text-xs text-parchment-dim">
+            <p className="mb-3 text-sm text-cream-soft">
               {total.toLocaleString("es-ES")} oportunidades encontradas
             </p>
 
             {featured && (
-              <div className="mb-5 max-w-sm">
-                <p className="mb-1 font-display text-xs font-semibold uppercase tracking-wide text-ember-bright">
+              <div className="mb-6 max-w-sm">
+                <p className="mb-2 font-display text-sm font-semibold text-terracotta-bright">
                   Mejor flip ahora mismo
                 </p>
                 <Ticket flip={featured} />
@@ -216,7 +216,7 @@ export function Dashboard() {
               <button
                 type="button"
                 onClick={() => setVisibleCount((c) => c + 30)}
-                className="mt-3 w-full rounded-sm border border-ink-line py-2 text-sm text-parchment-dim hover:border-ember-bright hover:text-ember-bright"
+                className="mt-3 w-full rounded-2xl bg-wood-soft py-3 text-sm text-cream-soft transition-colors hover:bg-wood-line/60 hover:text-cream"
               >
                 Cargar más resultados ({restFlips.length - visibleCount} restantes)
               </button>
@@ -227,19 +227,20 @@ export function Dashboard() {
 
       {selected && (
         <div
-          className="fixed inset-0 z-50 flex justify-end bg-black/60"
+          className="fixed inset-0 z-50 flex justify-end bg-wood/70 backdrop-blur-sm"
           onClick={() => setSelected(null)}
         >
           <div
-            className="h-full w-full max-w-sm overflow-y-auto bg-ink p-4"
+            className="h-full w-full max-w-sm overflow-y-auto bg-wood p-5"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
               onClick={() => setSelected(null)}
-              className="mb-3 text-sm text-parchment-dim hover:text-ember-bright"
+              className="mb-4 flex h-8 w-8 items-center justify-center rounded-full bg-wood-soft text-cream-soft transition-colors hover:bg-terracotta hover:text-parchment"
+              aria-label="Cerrar"
             >
-              Cerrar ✕
+              ✕
             </button>
             <Ticket flip={selected} />
           </div>

@@ -27,7 +27,7 @@ export function ItemIcon({
   if (failed) {
     return (
       <div
-        className={`flex shrink-0 items-center justify-center rounded-md border border-ink-line bg-ink font-display text-parchment-dim ${className}`}
+        className={`flex shrink-0 items-center justify-center rounded-full bg-parchment-line font-display font-semibold text-ink-soft ${className}`}
         style={{ width: size, height: size, fontSize: Math.max(10, size * 0.38) }}
         title={itemName}
       >
@@ -59,7 +59,7 @@ export function ItemIcon({
         if (attempt < 1) setAttempt((a) => a + 1);
         else setFailed(true);
       }}
-      className={`shrink-0 rounded-md bg-ink-line/30 transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"} ${className}`}
+      className={`shrink-0 rounded-full bg-parchment-line/40 transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"} ${className}`}
       style={{ width: size, height: size }}
     />
   );

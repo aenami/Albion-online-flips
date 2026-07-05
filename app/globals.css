@@ -1,53 +1,66 @@
 @import "tailwindcss";
 
 :root {
-  /* Counting-house palette: aged iron, ledger parchment, copper ember. */
-  --color-ink: #17130f;
-  --color-ink-raised: #211b14;
-  --color-ink-line: #372c20;
-  --color-parchment: #ece2cc;
-  --color-parchment-dim: #b9ad93;
-  --color-ember: #c6772f;
-  --color-ember-bright: #e2913f;
-  --color-verdigris: #5f9484;
-  --color-blood: #a13f3f;
+  /* Warm-desk palette: walnut desk, lamplit parchment, wax-seal accents. */
+  --color-wood: #33230f;
+  --color-wood-soft: #432f16;
+  --color-wood-line: #5a4020;
+  --color-parchment: #fbf1dd;
+  --color-parchment-soft: #f3e4c0;
+  --color-parchment-line: #e2cd9c;
+  --color-ink: #3d2c17;
+  --color-ink-soft: #8a744f;
+  --color-cream: #f4e8cc;
+  --color-cream-soft: #cfb691;
+  --color-terracotta: #c1602e;
+  --color-terracotta-bright: #de7a3f;
+  --color-moss: #6b8e56;
+  --color-berry: #a23e33;
 }
 
 @theme inline {
-  --color-ink: var(--color-ink);
-  --color-ink-raised: var(--color-ink-raised);
-  --color-ink-line: var(--color-ink-line);
+  --color-wood: var(--color-wood);
+  --color-wood-soft: var(--color-wood-soft);
+  --color-wood-line: var(--color-wood-line);
   --color-parchment: var(--color-parchment);
-  --color-parchment-dim: var(--color-parchment-dim);
-  --color-ember: var(--color-ember);
-  --color-ember-bright: var(--color-ember-bright);
-  --color-verdigris: var(--color-verdigris);
-  --color-blood: var(--color-blood);
+  --color-parchment-soft: var(--color-parchment-soft);
+  --color-parchment-line: var(--color-parchment-line);
+  --color-ink: var(--color-ink);
+  --color-ink-soft: var(--color-ink-soft);
+  --color-cream: var(--color-cream);
+  --color-cream-soft: var(--color-cream-soft);
+  --color-terracotta: var(--color-terracotta);
+  --color-terracotta-bright: var(--color-terracotta-bright);
+  --color-moss: var(--color-moss);
+  --color-berry: var(--color-berry);
 
   --font-display: var(--font-display);
   --font-body: var(--font-body);
   --font-mono: var(--font-mono);
 }
 
-* {
-  border-color: var(--color-ink-line);
-}
-
 body {
+  background-color: var(--color-wood);
   background-image:
-    radial-gradient(ellipse 1200px 600px at 15% -10%, rgba(198, 119, 47, 0.08), transparent),
-    radial-gradient(ellipse 900px 500px at 100% 0%, rgba(95, 148, 132, 0.06), transparent);
+    radial-gradient(ellipse 1100px 600px at 12% -10%, rgba(222, 122, 63, 0.14), transparent),
+    radial-gradient(ellipse 900px 700px at 100% 10%, rgba(107, 142, 86, 0.08), transparent);
 }
 
 ::selection {
-  background: var(--color-ember);
-  color: var(--color-ink);
+  background: var(--color-terracotta);
+  color: var(--color-parchment);
 }
 
-/* Tabular figures everywhere numbers appear, so ledger columns line up. */
+/* Tabular figures everywhere numbers appear, so amounts line up in columns. */
 .font-mono {
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
+}
+
+/* Fraunces leans into its "soft" optical character for headings, instead of
+   the sharper high-contrast cut most editorial serifs default to. */
+.font-display {
+  font-variation-settings: "SOFT" 60, "opsz" 30;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -15,10 +15,10 @@ import {
 } from "@/lib/labels";
 import { ItemIcon } from "./ItemIcon";
 
-function riskColor(risk: FlipOpportunity["risk"]) {
-  if (risk === "low") return "text-verdigris";
-  if (risk === "medium") return "text-ember-bright";
-  return "text-blood";
+function riskPillClass(risk: FlipOpportunity["risk"]) {
+  if (risk === "low") return "bg-moss/15 text-moss";
+  if (risk === "medium") return "bg-terracotta/15 text-terracotta";
+  return "bg-berry/15 text-berry";
 }
 
 function Line({
@@ -31,11 +31,9 @@ function Line({
   muted?: boolean;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 py-0.5">
-      <span className={`text-sm ${muted ? "text-parchment-dim" : "text-parchment"}`}>
-        {label}
-      </span>
-      <span className="font-mono text-sm text-parchment">{value}</span>
+    <div className="flex items-baseline justify-between gap-3 py-1">
+      <span className={`text-sm ${muted ? "text-ink-soft" : "text-ink"}`}>{label}</span>
+      <span className="font-mono text-sm text-ink">{value}</span>
     </div>
   );
 }
@@ -54,14 +52,13 @@ export function Ticket({ flip }: { flip: FlipOpportunity }) {
     | undefined;
 
   return (
-    <div className="relative rounded-sm border border-ink-line bg-ink-raised shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
+    <div className="overflow-hidden rounded-3xl bg-parchment shadow-lg shadow-black/15">
       <div
-        className="h-3 w-full bg-ink"
+        className="h-3 w-full bg-wood/25"
         style={{
-          maskImage:
-            "repeating-linear-gradient(90deg, black 0 6px, transparent 6px 12px)",
+          maskImage: "repeating-linear-gradient(90deg, black 0 7px, transparent 7px 14px)",
           WebkitMaskImage:
-            "repeating-linear-gradient(90deg, black 0 6px, transparent 6px 12px)",
+            "repeating-linear-gradient(90deg, black 0 7px, transparent 7px 14px)",
         }}
         aria-hidden
       />
@@ -74,37 +71,35 @@ export function Ticket({ flip }: { flip: FlipOpportunity }) {
             size={48}
           />
           <div className="min-w-0 flex-1">
-            <p className="font-display text-lg leading-tight font-semibold text-parchment">
+            <p className="font-display text-lg leading-tight font-semibold text-ink">
               {flip.itemName}
             </p>
-            <p className="text-xs uppercase tracking-wide text-parchment-dim">
-              {FLIP_TYPE_LABELS[flip.type]}
-            </p>
+            <p className="text-sm text-ink-soft">{FLIP_TYPE_LABELS[flip.type]}</p>
           </div>
         </div>
 
-        <div className="mb-3 flex flex-wrap gap-1.5 text-[11px] uppercase tracking-wide">
-          <span className="rounded-sm border border-ink-line px-1.5 py-0.5 text-parchment-dim">
+        <div className="mb-3 flex flex-wrap gap-1.5 text-xs">
+          <span className="rounded-full bg-parchment-soft px-2.5 py-1 text-ink-soft">
             Tier {flip.tier}
           </span>
-          <span className="rounded-sm border border-ink-line px-1.5 py-0.5 text-parchment-dim">
+          <span className="rounded-full bg-parchment-soft px-2.5 py-1 text-ink-soft">
             {QUALITY_LABELS[flip.quality]}
           </span>
-          <span className="rounded-sm border border-ink-line px-1.5 py-0.5 text-parchment-dim">
+          <span className="rounded-full bg-parchment-soft px-2.5 py-1 text-ink-soft">
             {enchantLabel(flip.enchantLevel)}
           </span>
-          <span className="rounded-sm border border-ink-line px-1.5 py-0.5 text-parchment-dim">
+          <span className="rounded-full bg-parchment-soft px-2.5 py-1 text-ink-soft">
             {categoryLabel(flip.category)}
           </span>
         </div>
 
-        <div className="mb-3 flex items-center gap-2 font-mono text-sm text-ember-bright">
+        <div className="mb-3 flex items-center gap-2 font-mono text-sm font-medium text-terracotta">
           <span>{flip.buyCity}</span>
           <span aria-hidden>&rarr;</span>
           <span>{flip.sellCity}</span>
         </div>
 
-        <div className="border-t border-dashed border-ink-line pt-2">
+        <div className="border-t border-dashed border-parchment-line pt-1">
           {meta ? (
             <>
               <Line
@@ -138,50 +133,45 @@ export function Ticket({ flip }: { flip: FlipOpportunity }) {
           />
         </div>
 
-        <div className="mt-2 flex items-center justify-between border-t border-dashed border-ink-line pt-2">
-          <span className="text-xs text-parchment-dim">Unidades a simular</span>
+        <div className="mt-1 flex items-center justify-between border-t border-dashed border-parchment-line pt-2.5">
+          <span className="text-sm text-ink-soft">Unidades a simular</span>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setQty((q) => Math.max(1, q - 1))}
-              className="h-6 w-6 rounded-sm border border-ink-line text-parchment hover:border-ember-bright"
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-parchment-soft text-ink transition-colors hover:bg-terracotta hover:text-parchment"
             >
               −
             </button>
-            <span className="w-8 text-center font-mono text-sm text-parchment">{qty}</span>
+            <span className="w-8 text-center font-mono text-sm text-ink">{qty}</span>
             <button
               type="button"
               onClick={() => setQty((q) => q + 1)}
-              className="h-6 w-6 rounded-sm border border-ink-line text-parchment hover:border-ember-bright"
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-parchment-soft text-ink transition-colors hover:bg-terracotta hover:text-parchment"
             >
               +
             </button>
           </div>
         </div>
 
-        <div className="mt-2 border-t border-dashed border-ink-line pt-2">
+        <div className="mt-2 border-t border-dashed border-parchment-line pt-2.5">
           <div className="flex items-baseline justify-between">
-            <span className="font-display text-sm font-semibold uppercase tracking-wide text-parchment-dim">
-              Ganancia
-            </span>
-            <span className="font-mono text-2xl font-semibold text-ember-bright">
+            <span className="font-display text-base font-semibold text-ink">Ganancia</span>
+            <span className="font-mono text-2xl font-semibold text-terracotta">
               {formatSilver(flip.profit * qty)}
             </span>
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-xs text-parchment-dim">ROI</span>
-            <span className="font-mono text-sm text-parchment">
-              {formatPercent(flip.roi)}
-            </span>
+            <span className="text-sm text-ink-soft">ROI</span>
+            <span className="font-mono text-sm text-ink">{formatPercent(flip.roi)}</span>
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-ink-line pt-2 text-xs">
-          <span className={riskColor(flip.risk)}>
-            Riesgo {RISK_LABELS[flip.risk]}
-            <span className="text-parchment-dim"> · {TRAVEL_LABELS[flip.travel]}</span>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-parchment-line pt-3 text-xs">
+          <span className={`rounded-full px-2.5 py-1 font-medium ${riskPillClass(flip.risk)}`}>
+            {RISK_LABELS[flip.risk]} · {TRAVEL_LABELS[flip.travel]}
           </span>
-          <span className="text-parchment-dim">
+          <span className="text-ink-soft">
             Vol. {flip.liquidity.toFixed(1)}/día · {formatAge(flip.dataAgeMs)}
           </span>
         </div>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Libre_Franklin, IBM_Plex_Mono } from "next/font/google";
+import { Fraunces, Plus_Jakarta_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
 const display = Fraunces({
@@ -9,7 +9,7 @@ const display = Fraunces({
   weight: "variable",
 });
 
-const body = Libre_Franklin({
+const body = Plus_Jakarta_Sans({
   variable: "--font-body",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -37,7 +37,7 @@ export default function RootLayout({
       lang="es"
       className={`${display.variable} ${body.variable} ${dataMono.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col bg-ink text-parchment font-body antialiased">
+      <body className="min-h-full flex flex-col bg-wood text-cream font-body antialiased">
         {children}
       </body>
     </html>

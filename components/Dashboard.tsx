@@ -190,12 +190,20 @@ export function Dashboard() {
           />
 
           <div className="min-w-0 flex-1">
-            <p className="mb-3 text-sm text-cream-soft">
+            <p className="mb-3 flex items-center gap-2 text-sm text-cream-soft">
               {total.toLocaleString("es-ES")} oportunidades encontradas
+              {loading && (
+                <span
+                  aria-hidden
+                  className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-cream-soft border-t-transparent"
+                />
+              )}
             </p>
 
             {featured && (
-              <div className="mb-6 max-w-sm">
+              <div
+                className={`mb-6 max-w-sm transition-opacity ${loading ? "opacity-60" : ""}`}
+              >
                 <p className="mb-2 font-display text-sm font-semibold text-terracotta-bright">
                   Mejor flip ahora mismo
                 </p>
@@ -210,6 +218,7 @@ export function Dashboard() {
               onSortChange={handleSortChange}
               onSelect={setSelected}
               selectedId={selected?.id}
+              loading={loading}
             />
 
             {hasMore && (

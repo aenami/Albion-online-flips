@@ -10,6 +10,7 @@ import {
   enchantRecipes,
   isBlackMarketEligible,
   enchantedId,
+  getCatalogItem,
 } from "./catalog";
 import {
   costOfBuyOrder,
@@ -128,6 +129,45 @@ function ageMs(dateStr: string): number {
 
 function hasValidSellSide(row: PriceRow | undefined): row is PriceRow {
   return !!row && row.sell_price_min > 0;
+}
+
+interface MaterialPriceInfo {
+  price: number;
+  dataAgeMs: number;
+}
+
+// Enchanting a single piece of gear needs dozens of runes/souls/relics at
+// once, so the single cheapest listed sell order (which the API surfaces as
+// sell_price_min) rarely has enough depth to cover the whole purchase - the
+// real average cost ends up higher. As a proxy for "what you'd actually pay
+// in bulk" without order-book depth data, we take the median sell price
+// across every source city instead of the citywide minimum: a realistic
+// middle ground between the cheapest and priciest cities right now.
+function medianMaterialPrice(
+  priceIndex: PriceIndex,
+  resource: string
+): MaterialPriceInfo | null {
+  const observations: { price: number; ageMs: number }[] = [];
+  for (const city of SOURCE_CITIES) {
+    for (let quality = 1; quality <= 5; quality++) {
+      const row = getRow(priceIndex, resource, city, quality);
+      if (!row || !hasValidSellSide(row)) continue;
+      observations.push({
+        price: row.sell_price_min,
+        ageMs: ageMs(row.sell_price_min_date),
+      });
+    }
+  }
+  if (observations.length === 0) return null;
+
+  observations.sort((a, b) => a.price - b.price);
+  const mid = Math.floor(observations.length / 2);
+  if (observations.length % 2 === 0) {
+    const lo = observations[mid - 1];
+    const hi = observations[mid];
+    return { price: (lo.price + hi.price) / 2, dataAgeMs: Math.max(lo.ageMs, hi.ageMs) };
+  }
+  return { price: observations[mid].price, dataAgeMs: observations[mid].ageMs };
 }
 
 function hasValidBuySide(row: PriceRow | undefined): row is PriceRow {
@@ -374,52 +414,48 @@ export function computeBlackMarketDirectFlips(
         const bmRow = getRow(priceIndex, itemId, "Black Market", quality);
         if (!bmRow || !hasValidBuySide(bmRow)) continue;
 
-        let sourceCity: Location | null = null;
-        let sourceRow: PriceRow | null = null;
-        for (const city of SOURCE_CITIES) {
-          const row = getRow(priceIndex, itemId, city, quality);
-          if (!row || !hasValidSellSide(row)) continue;
-          if (!sourceRow || row.sell_price_min < sourceRow.sell_price_min) {
-            sourceCity = city;
-            sourceRow = row;
-          }
+        // Emit one candidate per source city (not just the globally cheapest
+        // one) so that e.g. a Caerleon-only route is still visible even when
+        // a royal city happens to offer a lower price for the same item.
+        for (const sourceCity of SOURCE_CITIES) {
+          const sourceRow = getRow(priceIndex, itemId, sourceCity, quality);
+          if (!sourceRow || !hasValidSellSide(sourceRow)) continue;
+
+          const dataAge = Math.max(
+            ageMs(sourceRow.sell_price_min_date),
+            ageMs(bmRow.buy_price_max_date)
+          );
+          if (dataAge > maxAgeMs) continue;
+
+          const investment = costOfInstantBuy(sourceRow.sell_price_min);
+          const revenue = netFromBlackMarketSale(bmRow.buy_price_max);
+          const profit = revenue - investment;
+          if (profit <= 0) continue;
+
+          const travel = travelFor(sourceCity, "Black Market");
+
+          results.push({
+            id: makeId("bm-direct", itemId, sourceCity, quality),
+            type: "black-market-direct",
+            itemId,
+            itemName: item.name,
+            tier: item.tier,
+            enchantLevel: level,
+            quality,
+            category: item.category,
+            subcategory: item.subcategory,
+            buyCity: sourceCity,
+            sellCity: "Black Market",
+            investment,
+            profit,
+            roi: profit / investment,
+            liquidity: getLiquidity(liquidityIndex, itemId, sourceCity, quality),
+            dataAgeMs: dataAge,
+            risk: riskFor(travel),
+            travel,
+            mode: "instant",
+          });
         }
-        if (!sourceCity || !sourceRow) continue;
-
-        const dataAge = Math.max(
-          ageMs(sourceRow.sell_price_min_date),
-          ageMs(bmRow.buy_price_max_date)
-        );
-        if (dataAge > maxAgeMs) continue;
-
-        const investment = costOfInstantBuy(sourceRow.sell_price_min);
-        const revenue = netFromBlackMarketSale(bmRow.buy_price_max);
-        const profit = revenue - investment;
-        if (profit <= 0) continue;
-
-        const travel = travelFor(sourceCity, "Black Market");
-
-        results.push({
-          id: makeId("bm-direct", itemId, sourceCity, quality),
-          type: "black-market-direct",
-          itemId,
-          itemName: item.name,
-          tier: item.tier,
-          enchantLevel: level,
-          quality,
-          category: item.category,
-          subcategory: item.subcategory,
-          buyCity: sourceCity,
-          sellCity: "Black Market",
-          investment,
-          profit,
-          roi: profit / investment,
-          liquidity: getLiquidity(liquidityIndex, itemId, sourceCity, quality),
-          dataAgeMs: dataAge,
-          risk: riskFor(travel),
-          travel,
-          mode: "instant",
-        });
       }
     }
   }
@@ -438,6 +474,16 @@ export function computeEnchantBlackMarketFlips(
 ): FlipOpportunity[] {
   const results: FlipOpportunity[] = [];
 
+  // A given resource (e.g. T5_RUNE) is shared by dozens of catalog items, so
+  // memoize its cross-city median price instead of recomputing it per item.
+  const materialPriceCache = new Map<string, MaterialPriceInfo | null>();
+  const getMaterialPrice = (resource: string): MaterialPriceInfo | null => {
+    if (!materialPriceCache.has(resource)) {
+      materialPriceCache.set(resource, medianMaterialPrice(priceIndex, resource));
+    }
+    return materialPriceCache.get(resource) ?? null;
+  };
+
   for (const item of catalog) {
     if (!isBlackMarketEligible(item)) continue;
     const recipe = enchantRecipes[item.id];
@@ -447,87 +493,67 @@ export function computeEnchantBlackMarketFlips(
       const level = Number(levelStr);
       const { resource, count } = recipe[levelStr];
       const targetItemId = enchantedId(item.id, level);
+      const materialInfo = getMaterialPrice(resource);
+      if (!materialInfo) continue;
+      const materialName = getCatalogItem(resource)?.name ?? resource;
 
       for (let quality = 1; quality <= 5; quality++) {
         const bmRow = getRow(priceIndex, targetItemId, "Black Market", quality);
         if (!bmRow || !hasValidBuySide(bmRow)) continue;
 
-        let bestCity: Location | null = null;
-        let bestCost = Infinity;
-        let bestDataAge = 0;
-        let bestBasePrice = 0;
-        let bestMaterialPrice = 0;
-
+        // Emit one candidate per source city (not just the globally cheapest
+        // one) so that e.g. a Caerleon-only route is still visible even when
+        // a royal city happens to offer a lower total cost for the same item.
         for (const city of SOURCE_CITIES) {
           const baseRow = getRow(priceIndex, item.id, city, quality);
           if (!baseRow || !hasValidSellSide(baseRow)) continue;
 
-          // Any quality of the raw material works for enchanting; take the
-          // cheapest one available in this city.
-          let materialPrice = Infinity;
-          let materialAge = Infinity;
-          for (let mq = 1; mq <= 5; mq++) {
-            const materialRow = getRow(priceIndex, resource, city, mq);
-            if (!materialRow || !hasValidSellSide(materialRow)) continue;
-            if (materialRow.sell_price_min < materialPrice) {
-              materialPrice = materialRow.sell_price_min;
-              materialAge = ageMs(materialRow.sell_price_min_date);
-            }
-          }
-          if (!Number.isFinite(materialPrice)) continue;
+          const materialTotalCost = count * costOfInstantBuy(materialInfo.price);
+          const totalCost = costOfInstantBuy(baseRow.sell_price_min) + materialTotalCost;
+          const dataAge = Math.max(
+            ageMs(baseRow.sell_price_min_date),
+            materialInfo.dataAgeMs,
+            ageMs(bmRow.buy_price_max_date)
+          );
+          if (dataAge > maxAgeMs) continue;
 
-          const totalCost =
-            costOfInstantBuy(baseRow.sell_price_min) +
-            count * costOfInstantBuy(materialPrice);
+          const revenue = netFromBlackMarketSale(bmRow.buy_price_max);
+          const profit = revenue - totalCost;
+          if (profit <= 0) continue;
 
-          if (totalCost < bestCost) {
-            bestCost = totalCost;
-            bestCity = city;
-            bestBasePrice = baseRow.sell_price_min;
-            bestMaterialPrice = materialPrice;
-            bestDataAge = Math.max(ageMs(baseRow.sell_price_min_date), materialAge);
-          }
+          const travel = travelFor(city, "Black Market");
+
+          results.push({
+            id: makeId("enchant-bm", targetItemId, city, quality),
+            type: "enchant-black-market",
+            itemId: targetItemId,
+            itemName: `${item.name} (${levelStr})`,
+            tier: item.tier,
+            enchantLevel: level,
+            quality,
+            category: item.category,
+            subcategory: item.subcategory,
+            buyCity: city,
+            sellCity: "Black Market",
+            investment: totalCost,
+            profit,
+            roi: profit / totalCost,
+            liquidity: getLiquidity(liquidityIndex, targetItemId, city, quality),
+            dataAgeMs: dataAge,
+            risk: riskFor(travel),
+            travel,
+            mode: "instant",
+            meta: {
+              baseItemId: item.id,
+              basePrice: baseRow.sell_price_min,
+              material: resource,
+              materialName,
+              materialUnitPrice: materialInfo.price,
+              materialCount: count,
+              materialTotalCost,
+            },
+          });
         }
-
-        if (!bestCity) continue;
-        const dataAge = Math.max(bestDataAge, ageMs(bmRow.buy_price_max_date));
-        if (dataAge > maxAgeMs) continue;
-
-        const revenue = netFromBlackMarketSale(bmRow.buy_price_max);
-        const profit = revenue - bestCost;
-        if (profit <= 0) continue;
-
-        const travel = travelFor(bestCity, "Black Market");
-
-        results.push({
-          id: makeId("enchant-bm", targetItemId, bestCity, quality),
-          type: "enchant-black-market",
-          itemId: targetItemId,
-          itemName: `${item.name} (${levelStr})`,
-          tier: item.tier,
-          enchantLevel: level,
-          quality,
-          category: item.category,
-          subcategory: item.subcategory,
-          buyCity: bestCity,
-          sellCity: "Black Market",
-          investment: bestCost,
-          profit,
-          roi: profit / bestCost,
-          liquidity: getLiquidity(liquidityIndex, targetItemId, bestCity, quality),
-          dataAgeMs: dataAge,
-          risk: riskFor(travel),
-          travel,
-          mode: "instant",
-          meta: {
-            baseItemId: item.id,
-            basePrice: bestBasePrice,
-            material: resource,
-            materialUnitPrice: bestMaterialPrice,
-            materialCount: count,
-            materialTotalCost: count * bestMaterialPrice,
-          },
-        });
       }
     }
   }

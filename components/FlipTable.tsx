@@ -33,6 +33,7 @@ export function FlipTable({
   onSortChange,
   onSelect,
   selectedId,
+  loading,
 }: {
   flips: FlipOpportunity[];
   sortBy: SortBy;
@@ -40,9 +41,21 @@ export function FlipTable({
   onSortChange: (sortBy: SortBy) => void;
   onSelect: (flip: FlipOpportunity) => void;
   selectedId?: string;
+  loading?: boolean;
 }) {
   return (
-    <div className="overflow-hidden rounded-3xl bg-parchment shadow-md shadow-black/10">
+    <div className="relative overflow-hidden rounded-3xl bg-parchment shadow-md shadow-black/10">
+      {loading && (
+        <div className="absolute inset-0 z-10 flex items-start justify-center bg-parchment/70 pt-14 backdrop-blur-[1px]">
+          <div className="flex items-center gap-2.5 rounded-full bg-parchment px-4 py-2 text-sm text-ink-soft shadow-md">
+            <span
+              aria-hidden
+              className="h-4 w-4 animate-spin rounded-full border-2 border-terracotta border-t-transparent"
+            />
+            Buscando flips…
+          </div>
+        </div>
+      )}
       <div className="overflow-x-auto">
         <table className="w-full min-w-[860px] border-collapse text-sm">
           <thead>

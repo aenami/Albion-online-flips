@@ -55,6 +55,21 @@ function tierFromId(id, attrTier) {
   return match ? Number(match[1]) : 0;
 }
 
+// The upgraderequirements/@count field in this dump is stale (last updated
+// Jan 2023) and still reflects a pre-rebalance value that's exactly half of
+// the current in-game cost. The quantity of runes/souls/relics needed per
+// enchant level is constant across tiers T4-T8 (only the resource's own tier
+// changes) and depends only on the item's slot weight, so it's hardcoded
+// here from current community-verified values rather than trusted from the
+// dump. Resource identity/tier (rune vs soul vs relic) still comes from the
+// dump, since that part isn't affected by the rebalance.
+function enchantMaterialCount(id) {
+  if (id.includes("_2H_")) return 384; // two-handed weapons
+  if (id.includes("_MAIN_")) return 288; // one-handed weapons
+  if (id.includes("_ARMOR_") || id.includes("_BAG_")) return 192; // chest, bags
+  return 96; // head, shoes, cape, off-hand
+}
+
 async function main() {
   console.log("Downloading raw game data...");
   const [rawData, namesData] = await Promise.all([
@@ -116,7 +131,7 @@ async function main() {
         if (!enchantRecipes[id]) enchantRecipes[id] = {};
         enchantRecipes[id][levelNum] = {
           resource: upgradeResource["@uniquename"],
-          count: Number(upgradeResource["@count"]),
+          count: enchantMaterialCount(id),
         };
       }
     }

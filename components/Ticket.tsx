@@ -44,6 +44,7 @@ export function Ticket({ flip }: { flip: FlipOpportunity }) {
   const meta = flip.meta as
     | {
         material: string;
+        materialName: string;
         materialUnitPrice: number;
         materialCount: number;
         materialTotalCost: number;
@@ -107,11 +108,20 @@ export function Ticket({ flip }: { flip: FlipOpportunity }) {
                 value={formatSilver(meta.basePrice * qty)}
                 muted
               />
-              <Line
-                label={`Material x${meta.materialCount * qty}`}
-                value={formatSilver(meta.materialTotalCost * qty)}
-                muted
-              />
+              <div className="py-1">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-sm text-ink-soft">
+                    {meta.materialName} x{meta.materialCount * qty}
+                  </span>
+                  <span className="font-mono text-sm text-ink">
+                    {formatSilver(meta.materialTotalCost * qty)}
+                  </span>
+                </div>
+                <p className="text-xs text-ink-soft/70">
+                  {formatSilver(meta.materialUnitPrice)} c/u · precio intermedio entre
+                  ciudades, no el más barato
+                </p>
+              </div>
             </>
           ) : (
             <Line

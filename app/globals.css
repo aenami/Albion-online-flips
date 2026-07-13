@@ -1,7 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  /* Warm-desk palette: walnut desk, lamplit parchment, wax-seal accents. */
+  /* Warm-desk palette: walnut desk, lamplit parchment, wax-seal accents.
+     Text colors on parchment are tuned to clear WCAG AA (4.5:1) on both
+     parchment and parchment-soft; see the contrast notes per token. */
   --color-wood: #33230f;
   --color-wood-soft: #432f16;
   --color-wood-line: #5a4020;
@@ -9,13 +11,21 @@
   --color-parchment-soft: #f3e4c0;
   --color-parchment-line: #e2cd9c;
   --color-ink: #3d2c17;
-  --color-ink-soft: #8a744f;
+  --color-ink-soft: #755f38; /* 5.4:1 on parchment, 4.8:1 on parchment-soft */
   --color-cream: #f4e8cc;
   --color-cream-soft: #cfb691;
-  --color-terracotta: #c1602e;
-  --color-terracotta-bright: #de7a3f;
-  --color-moss: #6b8e56;
-  --color-berry: #a23e33;
+  /* Wax-seal terracotta, deepened so parchment text on the fill (buttons,
+     active tab) and terracotta text on parchment both clear 4.5:1. */
+  --color-terracotta: #a04a1a;
+  --color-terracotta-bright: #de7a3f; /* wood-only accent/hover (5:1 on wood) */
+  --color-terracotta-deep: #843c14; /* pressed/hover on light surfaces */
+  /* Signal green (buy / positive / low risk), deepened to a forest-olive so it
+     clears 4.5:1 as text on parchment and on its own 15% pill tint. */
+  --color-moss: #4b6937;
+  --color-berry: #a23e33; /* 5.7:1 on parchment, 4.6:1 on its own tint */
+  /* Focus ring: the one terracotta luminance that clears 3:1 against BOTH the
+     dark wood and light parchment surfaces (UI-component contrast, WCAG 1.4.11). */
+  --color-ring: #c1602e;
 }
 
 @theme inline {
@@ -31,8 +41,10 @@
   --color-cream-soft: var(--color-cream-soft);
   --color-terracotta: var(--color-terracotta);
   --color-terracotta-bright: var(--color-terracotta-bright);
+  --color-terracotta-deep: var(--color-terracotta-deep);
   --color-moss: var(--color-moss);
   --color-berry: var(--color-berry);
+  --color-ring: var(--color-ring);
 
   --font-display: var(--font-display);
   --font-body: var(--font-body);
@@ -61,6 +73,34 @@ body {
    the sharper high-contrast cut most editorial serifs default to. */
 .font-display {
   font-variation-settings: "SOFT" 60, "opsz" 30;
+}
+
+/* One branded focus indicator for every interactive element. Uses the mid
+   terracotta (--color-ring) so it clears 3:1 on both wood and parchment.
+   :where() keeps specificity at 0 so component styles can still opt out. */
+:where(a, button, input, select, textarea, summary, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Skeleton placeholder for loading rows: a slow parchment shimmer. The
+   reduced-motion block below freezes it into a static tint. */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-parchment-soft) 25%,
+    var(--color-parchment-line) 50%,
+    var(--color-parchment-soft) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+@keyframes skeleton-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

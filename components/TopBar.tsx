@@ -103,7 +103,7 @@ export function TopBar({
               type="button"
               onClick={onRefresh}
               disabled={loading}
-              className="rounded-full bg-terracotta px-4 py-1.5 font-medium text-parchment shadow-sm transition-colors hover:bg-terracotta-bright disabled:opacity-50"
+              className="rounded-full bg-terracotta px-4 py-1.5 font-medium text-parchment shadow-sm transition-colors hover:bg-terracotta-deep disabled:opacity-50"
             >
               Actualizar
             </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { FlipOpportunity } from "@/lib/flipEngine";
 import {
   FLIP_TYPE_LABELS,
@@ -17,7 +17,7 @@ import { ItemIcon } from "./ItemIcon";
 
 function riskPillClass(risk: FlipOpportunity["risk"]) {
   if (risk === "low") return "bg-moss/15 text-moss";
-  if (risk === "medium") return "bg-terracotta/15 text-terracotta";
+  if (risk === "medium") return "bg-terracotta/15 text-terracotta-deep";
   return "bg-berry/15 text-berry";
 }
 
@@ -39,7 +39,17 @@ function Line({
 }
 
 export function Ticket({ flip }: { flip: FlipOpportunity }) {
+  const qtyId = useId();
+  // `qty` is the numeric source of truth for the math; `qtyText` mirrors the
+  // input so the user can clear it and type a multi-digit amount freely, with
+  // normalization deferred to blur / the +/- buttons.
   const [qty, setQty] = useState(1);
+  const [qtyText, setQtyText] = useState("1");
+  const setQtyBoth = (n: number) => {
+    const v = Math.max(1, Math.floor(n));
+    setQty(v);
+    setQtyText(String(v));
+  };
   const revenue = (flip.investment + flip.profit) * qty;
   const meta = flip.meta as
     | {
@@ -117,7 +127,7 @@ export function Ticket({ flip }: { flip: FlipOpportunity }) {
                     {formatSilver(meta.materialTotalCost * qty)}
                   </span>
                 </div>
-                <p className="text-xs text-ink-soft/70">
+                <p className="text-xs text-ink-soft">
                   {formatSilver(meta.materialUnitPrice)} c/u · precio intermedio entre
                   ciudades, no el más barato
                 </p>
@@ -144,20 +154,37 @@ export function Ticket({ flip }: { flip: FlipOpportunity }) {
         </div>
 
         <div className="mt-1 flex items-center justify-between border-t border-dashed border-parchment-line pt-2.5">
-          <span className="text-sm text-ink-soft">Unidades a simular</span>
-          <div className="flex items-center gap-2">
+          <label htmlFor={qtyId} className="text-sm text-ink-soft">
+            Unidades a simular
+          </label>
+          <div className="flex items-center gap-1.5">
             <button
               type="button"
-              onClick={() => setQty((q) => Math.max(1, q - 1))}
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-parchment-soft text-ink transition-colors hover:bg-terracotta hover:text-parchment"
+              aria-label="Quitar una unidad"
+              onClick={() => setQtyBoth(qty - 1)}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-parchment-soft text-ink transition-colors hover:bg-terracotta hover:text-parchment"
             >
               −
             </button>
-            <span className="w-8 text-center font-mono text-sm text-ink">{qty}</span>
+            <input
+              id={qtyId}
+              type="number"
+              inputMode="numeric"
+              min={1}
+              value={qtyText}
+              onChange={(e) => {
+                setQtyText(e.target.value);
+                const n = Number(e.target.value);
+                if (Number.isFinite(n) && n >= 1) setQty(Math.floor(n));
+              }}
+              onBlur={() => setQtyBoth(qty)}
+              className="w-16 rounded-lg bg-parchment-soft px-2 py-1.5 text-center font-mono text-sm text-ink"
+            />
             <button
               type="button"
-              onClick={() => setQty((q) => q + 1)}
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-parchment-soft text-ink transition-colors hover:bg-terracotta hover:text-parchment"
+              aria-label="Añadir una unidad"
+              onClick={() => setQtyBoth(qty + 1)}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-parchment-soft text-ink transition-colors hover:bg-terracotta hover:text-parchment"
             >
               +
             </button>

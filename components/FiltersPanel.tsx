@@ -17,20 +17,23 @@ function ChipGroup<T extends string | number>({
   labels,
   selected,
   onToggle,
+  groupLabel,
 }: {
   options: readonly T[];
   labels?: (value: T) => string;
   selected: T[];
   onToggle: (value: T) => void;
+  groupLabel: string;
 }) {
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-1.5" role="group" aria-label={groupLabel}>
       {options.map((opt) => {
         const active = selected.includes(opt);
         return (
           <button
             key={opt}
             type="button"
+            aria-pressed={active}
             onClick={() => onToggle(opt)}
             className={`rounded-full px-3 py-1 text-sm transition-colors ${
               active
@@ -46,12 +49,39 @@ function ChipGroup<T extends string | number>({
   );
 }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+/** A labeled single control (input/select), with the label properly bound. */
+function Field({
+  label,
+  hint,
+  htmlFor,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  htmlFor: string;
+  children: React.ReactNode;
+}) {
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-medium text-ink">{label}</label>
+      <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-medium text-ink">
+        {label}
+      </label>
       {children}
-      {hint && <p className="mt-1.5 text-xs text-ink-soft">{hint}</p>}
+      {hint && (
+        <p id={`${htmlFor}-hint`} className="mt-1.5 text-xs text-ink-soft">
+          {hint}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** A labeled group of controls (chip toggles), announced as a named group. */
+function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <span className="mb-1.5 block text-sm font-medium text-ink">{label}</span>
+      {children}
     </div>
   );
 }
@@ -66,7 +96,7 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 }
 
 const inputClass =
-  "w-full rounded-xl border border-parchment-line bg-parchment px-3 py-2 text-sm text-ink placeholder:text-ink-soft/70 focus:border-terracotta focus:outline-none";
+  "w-full rounded-xl border border-parchment-line bg-parchment px-3 py-2 text-sm text-ink placeholder:text-ink-soft focus:border-terracotta";
 
 function toggleValue<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
@@ -95,14 +125,16 @@ export function FiltersPanel({
         <button
           type="button"
           onClick={onReset}
-          className="text-sm text-terracotta hover:text-terracotta-bright"
+          className="rounded text-sm text-terracotta hover:text-terracotta-deep"
         >
           Limpiar todo
         </button>
       </div>
 
       <input
+        id="filter-search"
         type="text"
+        aria-label="Buscar un ítem"
         value={filters.search}
         onChange={(e) => onChange({ search: e.target.value })}
         placeholder="Buscar un ítem..."
@@ -110,26 +142,29 @@ export function FiltersPanel({
       />
 
       <Group title="Qué buscar">
-        <Field label="Tier">
+        <FieldGroup label="Tier">
           <ChipGroup
+            groupLabel="Tier"
             options={TIERS}
             labels={(t) => `T${t}`}
             selected={filters.tiers}
             onToggle={(t) => onChange({ tiers: toggleValue(filters.tiers, t) })}
           />
-        </Field>
+        </FieldGroup>
 
-        <Field label="Calidad">
+        <FieldGroup label="Calidad">
           <ChipGroup
+            groupLabel="Calidad"
             options={QUALITIES}
             labels={(q) => QUALITY_LABELS[q].slice(0, 3)}
             selected={filters.qualities}
             onToggle={(q) => onChange({ qualities: toggleValue(filters.qualities, q) })}
           />
-        </Field>
+        </FieldGroup>
 
-        <Field label="Nivel de encantamiento">
+        <FieldGroup label="Nivel de encantamiento">
           <ChipGroup
+            groupLabel="Nivel de encantamiento"
             options={ENCHANT_LEVELS}
             labels={enchantLabel}
             selected={filters.enchantLevels}
@@ -137,35 +172,38 @@ export function FiltersPanel({
               onChange({ enchantLevels: toggleValue(filters.enchantLevels, l) })
             }
           />
-        </Field>
+        </FieldGroup>
 
-        <Field label="Categoría">
+        <FieldGroup label="Categoría">
           <ChipGroup
+            groupLabel="Categoría"
             options={categoryOptions}
             labels={categoryLabel}
             selected={filters.categories}
             onToggle={(c) => onChange({ categories: toggleValue(filters.categories, c) })}
           />
-        </Field>
+        </FieldGroup>
       </Group>
 
       <Group title="Dónde">
-        <Field label={isCrossCity ? "Ciudad de compra" : "Ciudad de origen"}>
+        <FieldGroup label={isCrossCity ? "Ciudad de compra" : "Ciudad de origen"}>
           <ChipGroup
+            groupLabel={isCrossCity ? "Ciudad de compra" : "Ciudad de origen"}
             options={NON_BLACK_MARKET_CITIES}
             selected={filters.buyCities}
             onToggle={(c) => onChange({ buyCities: toggleValue(filters.buyCities, c) })}
           />
-        </Field>
+        </FieldGroup>
 
         {isCrossCity && (
-          <Field label="Ciudad de venta">
+          <FieldGroup label="Ciudad de venta">
             <ChipGroup
+              groupLabel="Ciudad de venta"
               options={NON_BLACK_MARKET_CITIES}
               selected={filters.sellCities}
               onToggle={(c) => onChange({ sellCities: toggleValue(filters.sellCities, c) })}
             />
-          </Field>
+          </FieldGroup>
         )}
 
         {isBlackMarketTab && (
@@ -182,9 +220,11 @@ export function FiltersPanel({
       </Group>
 
       <Group title="Rentabilidad">
-        <Field label="Ganancia mínima (plata)">
+        <Field label="Ganancia mínima (plata)" htmlFor="f-minProfit">
           <input
+            id="f-minProfit"
             type="number"
+            inputMode="numeric"
             value={filters.minProfit}
             onChange={(e) => onChange({ minProfit: e.target.value })}
             placeholder="0"
@@ -192,9 +232,11 @@ export function FiltersPanel({
           />
         </Field>
 
-        <Field label="ROI mínimo (%)">
+        <Field label="ROI mínimo (%)" htmlFor="f-minRoi">
           <input
+            id="f-minRoi"
             type="number"
+            inputMode="decimal"
             value={filters.minRoi}
             onChange={(e) => onChange({ minRoi: e.target.value })}
             placeholder="0"
@@ -202,9 +244,11 @@ export function FiltersPanel({
           />
         </Field>
 
-        <Field label="Capital máximo disponible">
+        <Field label="Capital máximo disponible" htmlFor="f-maxInvestment">
           <input
+            id="f-maxInvestment"
             type="number"
+            inputMode="numeric"
             value={filters.maxInvestment}
             onChange={(e) => onChange({ maxInvestment: e.target.value })}
             placeholder="Sin límite"
@@ -215,9 +259,13 @@ export function FiltersPanel({
         <Field
           label="Liquidez mínima (unid/día)"
           hint="Evita ítems sin demanda real que inflan la ganancia en el papel."
+          htmlFor="f-minLiquidity"
         >
           <input
+            id="f-minLiquidity"
             type="number"
+            inputMode="numeric"
+            aria-describedby="f-minLiquidity-hint"
             value={filters.minLiquidity}
             onChange={(e) => onChange({ minLiquidity: e.target.value })}
             placeholder="0"
@@ -227,8 +275,9 @@ export function FiltersPanel({
       </Group>
 
       <Group title="Frescura y riesgo">
-        <Field label="Antigüedad máxima del dato">
+        <Field label="Antigüedad máxima del dato" htmlFor="f-maxAge">
           <select
+            id="f-maxAge"
             value={filters.maxAgeHours}
             onChange={(e) => onChange({ maxAgeHours: e.target.value })}
             className={inputClass}
@@ -242,14 +291,15 @@ export function FiltersPanel({
           </select>
         </Field>
 
-        <Field label="Riesgo">
+        <FieldGroup label="Riesgo">
           <ChipGroup
+            groupLabel="Riesgo"
             options={["low", "medium", "high"] as RiskLevel[]}
             labels={(r) => RISK_LABELS[r]}
             selected={filters.risk}
             onToggle={(r) => onChange({ risk: toggleValue(filters.risk, r) })}
           />
-        </Field>
+        </FieldGroup>
       </Group>
     </aside>
   );

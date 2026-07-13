@@ -45,3 +45,5 @@ next-env.d.ts
 CLAUDE.md
 ../DESIGN.md
 ../PRODUCT.md
+
+.vercel

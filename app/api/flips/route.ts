@@ -3,6 +3,13 @@ import { getMarketSnapshot, cacheAgeMs } from "@/lib/priceCache";
 import { computeAllFlips, type AllFlips, type FlipOpportunity, type FlipType } from "@/lib/flipEngine";
 import { applyFilters, filtersFromSearchParams, sortFlips, type SortBy, type SortDir } from "@/lib/filters";
 
+// Reads live market data and refreshes an on-disk/in-memory cache, so it must
+// run on the Node runtime and never be prerendered at build time. The cold-path
+// refresh fans out ~100 upstream calls, so give it a generous execution budget.
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
 const FLIP_TYPE_KEYS: Record<FlipType, Exclude<keyof AllFlips, "gold">> = {
   "same-city": "sameCity",
   "cross-city": "crossCity",
